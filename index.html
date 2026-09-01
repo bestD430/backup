@@ -1082,8 +1082,7 @@
                             </select>
                             <input type="text" class="config-input bus-route" placeholder="路線 (例: E36A)" value="${bus.route}" onchange="onBusMetaChanged(${index})">
                             <select class="config-select bus-dir" onchange="onDirectionChanged(${index})">
-                                <option value="outbound">方向載入中...</option>
-                                <option value="inbound" ${busDir === 'inbound' ? 'selected' : ''}></option>
+                                <option value="${busDir}" selected>方向載入中...</option>
                             </select>
                             <button class="delete-btn" onclick="deleteBusConfig(${index})">刪除</button>
                         </div>
@@ -1138,7 +1137,7 @@
                 return;
             }
 
-            dirSelect.innerHTML = '<option value="">方向載入中...</option>';
+            dirSelect.innerHTML = `<option value="${currentDir}">方向載入中...</option>`;
             let optionsHtml = '';
 
             try {
@@ -1239,7 +1238,8 @@
                 return;
             }
 
-            stopSelect.innerHTML = '<option value="">載入車站中...</option>';
+            const initialStop = item.dataset.currentStop || '';
+            stopSelect.innerHTML = `<option value="${initialStop}">載入車站中...</option>`;
             let optionsHtml = '<option value="">請選擇車站...</option>';
 
             try {
@@ -1340,12 +1340,30 @@
             item.dataset.currentStop = selectedOption.value;
         }
 
+        function syncCurrentDOMToBuses() {
+            const items = document.querySelectorAll('.config-item');
+            const tempConfigs = [];
+            items.forEach(item => {
+                const company = item.querySelector('.bus-company').value;
+                const route = item.querySelector('.bus-route').value.trim();
+                const dir = item.querySelector('.bus-dir').value;
+                const stop = item.querySelector('.bus-stop').value;
+                const origin_name = item.querySelector('.bus-origin').value.trim();
+                const dest_name = item.querySelector('.bus-dest').value.trim();
+                const offset = parseFloat(item.querySelector('.bus-offset').value);
+                tempConfigs.push({ company, route, dir, stop: stop || '', origin_name, dest_name, offset });
+            });
+            return tempConfigs;
+        }
+
         function addNewBusConfig() {
+            currentBuses = syncCurrentDOMToBuses();
             currentBuses.push({ company: "kmb", route: "", dir: "outbound", stop: "", origin_name: "", dest_name: "", offset: 0 });
             renderSettingsList();
         }
 
         function deleteBusConfig(index) {
+            currentBuses = syncCurrentDOMToBuses();
             currentBuses.splice(index, 1);
             renderSettingsList();
         }
